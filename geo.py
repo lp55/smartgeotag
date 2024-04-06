@@ -11,6 +11,7 @@ from enum import Enum
 from dataclasses import dataclass
 from time import sleep
 import fractions
+from functools import lru_cache
 
 batch = []
 batch_size = 950
@@ -185,13 +186,14 @@ def get_gps_data(file: Path) -> Coordinates | None:
         print(f"Error reading exif information from file {file}: {e}")
 
 
+@lru_cache(maxsize=1024)
 def get_image_gps(file: Path) -> Coordinates | None:
-    if result := get_gps_data(file):
-        return result
+    sidecar = file.with_suffix(f"{file.suffix}.xmp")
+    if sidecar.exists():
+        if result := get_gps_data(file):
+            return result
 
-    file = file.with_suffix(f"{file.suffix}.xmp")
-    if file.exists():
-        return get_gps_data(file)
+    return get_gps_data(file)
 
 
 def convert_string_degree(value: str) -> Fraction | None:

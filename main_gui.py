@@ -11,6 +11,7 @@ from geo import (
 )
 from location_gui import LocationWindow
 from map import set_map
+from pictures_model import PicturesModel
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -27,9 +28,6 @@ class MainWindow(QtWidgets.QMainWindow):
         layout = QtWidgets.QGridLayout()
 
         self.folder_model = QtWidgets.QFileSystemModel()
-        # pictures_path = QtCore.QStandardPaths.writable_location(
-        #    QtCore.QStandardPaths.StandardLocation.PicturesLocation
-        # )
         self.folder_model.set_root_path("")
         self.folder_model.set_filter(
             QtCore.QDir.Filter.AllDirs
@@ -38,13 +36,7 @@ class MainWindow(QtWidgets.QMainWindow):
         )
 
         self.folder_tree = QtWidgets.QTreeView(parent=self)
-        # folder_tree.size_adjust_policy = (
-        #    QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents
-        # )
-        # folder_tree.size_policy = QtWidgets.QSizePolicy.Policy.MinimumExpanding
         self.folder_tree.set_model(self.folder_model)
-        # folder_tree.set_root_index(folder_model.index(""))
-        # folder_tree.resize(800, 600)
 
         folder_header = self.folder_tree.header()
         folder_header.hide_section(1)
@@ -57,13 +49,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.web_view.set_html("No map data")
 
         v_layout = QtWidgets.QVBoxLayout()
-        # v_layout.add_stretch(2)
         v_layout.add_widget(self.web_view)
 
         layout.add_layout(v_layout, 0, 1, 2, 1)
 
-        self.pictures_model = QtWidgets.QFileSystemModel()  # PicturesModel()
-        # pictures_model.set_root_path("")
+        self.pictures_model = PicturesModel()  # QtWidgets.QFileSystemModel()
         self.pictures_model.set_filter(QtCore.QDir.Filter.Files)
         extensions = [f"*{ext}" for ext in images_extensions]
         self.pictures_model.set_name_filters(extensions)
