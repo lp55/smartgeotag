@@ -2,6 +2,7 @@ from pathlib import Path
 
 from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderTimedOut
+from geopy.location import Location
 
 
 from pyexiv2 import Image as ImageExiv2
@@ -156,6 +157,29 @@ def get_coordinates(location: str) -> Coordinates | None:
     print(f"Unable to get gps coordinates for {location}!")
 
 
+def get_suggestions(location: str) -> list[tuple[str, Coordinates]]:
+    geolocator = Nominatim(user_agent="geo")
+    count = 1
+    while count < 5:
+        try:
+            gps_locations: list[Location] = geolocator.geocode(
+                location, exactly_one=False, limit=5, timeout=5
+            )
+            return [
+                (location.address, Coordinates(location.latitude, location.longitude))
+                for location in gps_locations
+            ]
+        except GeocoderTimedOut as e:
+            sleep(1)
+            count += 1
+        except Exception as e:
+            print(f"Error: {e}")
+            break
+
+    print(f"Unable to get gps coordinates for {location}!")
+    return []
+
+
 def valid_gps_tags(tags: dict[str:str]) -> bool:
     return all(
         [
@@ -186,7 +210,7 @@ def get_gps_data(file: Path) -> Coordinates | None:
         print(f"Error reading exif information from file {file}: {e}")
 
 
-@lru_cache(maxsize=1024)
+@lru_cache(maxsize=2048)
 def get_image_gps(file: Path) -> Coordinates | None:
     sidecar = file.with_suffix(f"{file.suffix}.xmp")
     if sidecar.exists():

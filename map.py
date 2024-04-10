@@ -58,7 +58,7 @@ def bounds_and_center(
         return Coordinates(0, 0)
 
     if len(coordinates) == 1:
-        return coordinates[0], coordinates[0]
+        return None, coordinates[0]
 
     top_left = Coordinates(*map(min, zip(*coordinates)))
     bottom_right = Coordinates(*map(max, zip(*coordinates)))
@@ -75,6 +75,7 @@ def set_map(
     coordinates: list[Coordinates],
     markers: list[str] = [],
     descriptions: list[str] = [],
+    draggable=False,
 ):
     if not coordinates:
         raise Exception("No valid coordinates passed")
@@ -108,9 +109,19 @@ def set_map(
             # icon=folium.Icon(icon="9", prefix="fa", color="blue"),
             location=(coordinates[i].latitude, coordinates[i].longitude),
             popup=description,
+            draggable=draggable,
         ).add_to(map)
-    map.fit_bounds(bounds)
+
+    if bounds:
+        map.fit_bounds(bounds)
 
     data = io.BytesIO()
     map.save(data, close_file=False)
     web_view.set_html(data.getvalue().decode())
+    # web_view.set_html(map._repr_html_())
+
+
+def get_markers(
+    web_view: QtWebEngineWidgets.QWebEngineView,
+) -> list[tuple[str, str, Coordinates]]:
+    map = folium.Map(title="Coordinates", zoom_start=13, location=center)
